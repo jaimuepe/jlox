@@ -71,10 +71,9 @@ public class Scanner {
             case '>' -> addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
             case '/' -> {
                 if (match('/')) {
-                    // it's a comment
-                    while (peek() != '\n' && !isAtEnd()) {
-                        advance();
-                    }
+                    comment();
+                } else if (match('*')) {
+                    cComment();
                 } else {
                     addToken(TokenType.SLASH);
                 }
@@ -145,6 +144,33 @@ public class Scanner {
 
         String value = source.substring(start + 1, current - 1);
         addToken(TokenType.STRING, value);
+    }
+
+    private void comment() {
+        while (peek() != '\n' && !isAtEnd()) {
+            advance();
+        }
+    }
+
+    private void cComment() {
+
+        while (!isAtEnd() && !(peek() == '*' && peekNext() == '/')) {
+
+            if (peek() == '\n') {
+                line++;
+            }
+
+            advance();
+        }
+
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated comment");
+            return;
+        }
+
+        // consume the */
+        advance();
+        advance();
     }
 
     private boolean match(char expected) {
